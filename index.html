@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#060810" />
+  <meta name="description" content="Goals Fin — set, track, share and hit financial goals with AI insights. Offline-first." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Goals Fin" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <title>Goals Fin</title>
+  <style>
+    :root {
+      --bg: #060810;
+      --bg2: #0b0f1a;
+      --card: #101626;
+      --card2: #151c2e;
+      --line: rgba(255,255,255,.07);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --cyan: #38bdf8;
+      --indigo: #818cf8;
+      --violet: #c084fc;
+      --pink: #f472b6;
+      --amber: #fbbf24;
+      --green: #34d399;
+      --red: #fb7185;
+      --grad: linear-gradient(135deg, #38bdf8 0%, #818cf8 45%, #c084fc 75%, #f472b6 100%);
+      --radius: 18px;
+      --nav-h: 72px;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; -webkit-font-smoothing: antialiased; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    a { color: inherit; text-decoration: none; }
+    .app { min-height: 100%; max-width: 480px; margin: 0 auto; position: relative; padding-bottom: calc(var(--nav-h) + var(--safe-b) + 12px); }
+    .mesh {
+      pointer-events: none; position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 15% 0%, rgba(56,189,248,.22), transparent 55%),
+        radial-gradient(ellipse 50% 35% at 90% 8%, rgba(192,132,252,.18), transparent 50%),
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(244,114,182,.12), transparent 55%);
+    }
+    .screen { display: none; position: relative; z-index: 1; padding: 16px 16px 8px; animation: rise .35s ease; }
+    .screen.active { display: block; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes pulse { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
+
+    /* Onboarding */
+    #onboard { min-height: 100vh; display: none; align-items: center; justify-content: center; padding: 24px; position: relative; z-index: 50; }
+    #onboard.show { display: flex; }
+    .ob-card {
+      width: 100%; max-width: 380px; background: rgba(16,22,38,.92); border: 1px solid var(--line);
+      border-radius: 28px; padding: 28px 22px; backdrop-filter: blur(20px);
+      box-shadow: 0 30px 80px rgba(0,0,0,.5);
+    }
+    .logo-mark {
+      width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 22px;
+      background: var(--grad); display: grid; place-items: center;
+      box-shadow: 0 12px 40px rgba(56,189,248,.35);
+    }
+    .logo-mark svg { width: 40px; height: 40px; }
+    .ob-card h1 {
+      text-align: center; font-size: 28px; font-weight: 800; letter-spacing: -.03em;
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .ob-card .tag { text-align: center; color: var(--muted); font-size: 13px; margin: 8px 0 22px; line-height: 1.45; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .field input, .field select, .field textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
+      padding: 12px 14px; outline: none; transition: border .15s, box-shadow .15s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(56,189,248,.2);
+    }
+    .btn {
+      width: 100%; padding: 14px 16px; border-radius: 16px; font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform .12s, filter .12s;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--grad); color: #060810; box-shadow: 0 8px 28px rgba(56,189,248,.28); }
+    .btn-ghost { background: transparent; color: var(--muted); font-weight: 500; margin-top: 6px; }
+    .btn-soft { background: var(--card2); border: 1px solid var(--line); color: var(--text); }
+    .btn-bio { background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.35); color: var(--cyan); }
+    .pin-row { display: flex; gap: 10px; justify-content: center; margin: 10px 0 14px; }
+    .pin-row input {
+      width: 50px; height: 56px; text-align: center; font-size: 22px; font-weight: 700;
+      border-radius: 14px; background: var(--bg); border: 1px solid var(--line); outline: none;
+    }
+    .pin-row input:focus { border-color: var(--cyan); }
+    .err { color: var(--red); font-size: 12px; text-align: center; min-height: 16px; margin-bottom: 6px; }
+    .step { display: none; }
+    .step.on { display: block; animation: rise .3s ease; }
+
+    /* Header */
+    .top {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 8px 0 14px; position: sticky; top: 0; z-index: 10;
+      background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand .mark {
+      width: 36px; height: 36px; border-radius: 12px; background: var(--grad);
+      display: grid; place-items: center; box-shadow: 0 4px 16px rgba(56,189,248,.3);
+    }
+    .brand .mark svg { width: 20px; height: 20px; }
+    .brand strong { font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+    .brand span { display: block; font-size: 10px; color: var(--muted); font-weight: 500; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--card2); border: 1px solid var(--line);
+      display: grid; place-items: center; font-weight: 700; font-size: 13px; color: var(--cyan);
+    }
+
+    /* Momentum hero */
+    .hero {
+      background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+      padding: 18px; margin-bottom: 14px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ""; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px;
+      background: radial-gradient(circle, rgba(56,189,248,.25), transparent 70%);
+    }
+    .hero .label { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
+    .hero .big { font-size: 32px; font-weight: 800; letter-spacing: -.03em; margin: 6px 0 4px; }
+    .hero .sub { font-size: 13px; color: var(--muted); }
+    .momentum-bar {
+      height: 8px; border-radius: 99px; background: rgba(255,255,255,.06); margin-top: 14px; overflow: hidden;
+    }
+    .momentum-bar > i {
+      display: block; height: 100%; border-radius: 99px; background: var(--grad);
+      transition: width .6s cubic-bezier(.22,1,.36,1);
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .chip {
+      font-size: 11px; padding: 5px 10px; border-radius: 99px; background: rgba(255,255,255,.05);
+      border: 1px solid var(--line); color: var(--muted); font-weight: 600;
+    }
+    .chip.hot { color: var(--cyan); border-color: rgba(56,189,248,.3); background: rgba(56,189,248,.08); }
+    .chip.good { color: var(--green); border-color: rgba(52,211,153,.3); background: rgba(52,211,153,.08); }
+    .chip.warn { color: var(--amber); border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.08); }
+
+    /* Goal cards */
+    .section-h {
+      display: flex; align-items: center; justify-content: space-between; margin: 18px 0 10px;
+    }
+    .section-h h2 { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+    .section-h button { font-size: 12px; color: var(--cyan); font-weight: 600; }
+    .goal {
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 14px; margin-bottom: 10px; transition: border-color .15s, transform .15s;
+    }
+    .goal:active { transform: scale(.99); }
+    .goal-top { display: flex; gap: 12px; align-items: flex-start; }
+    .goal-ico {
+      width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .goal-body { flex: 1; min-width: 0; }
+    .goal-body h3 { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .goal-body p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .goal-amt { text-align: right; flex-shrink: 0; }
+    .goal-amt strong { display: block; font-size: 13px; font-weight: 700; }
+    .goal-amt span { font-size: 10px; color: var(--muted); }
+    .prog {
+      height: 6px; border-radius: 99px; background: rgba(255,255,255,.06); margin-top: 12px; overflow: hidden;
+    }
+    .prog > i { display: block; height: 100%; border-radius: 99px; background: var(--grad); }
+    .goal-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted); }
+
+    /* AI Insight card */
+    .ai-card {
+      background: linear-gradient(145deg, rgba(56,189,248,.1), rgba(192,132,252,.08));
+      border: 1px solid rgba(56,189,248,.2); border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+    }
+    .ai-card .ai-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .ai-card .ai-h span {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--cyan); background: rgba(56,189,248,.12); padding: 3px 8px; border-radius: 99px;
+    }
+    .ai-card p { font-size: 13px; line-height: 1.5; color: #e2e8f0; }
+    .ai-card .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .ai-card .actions button {
+      font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 99px;
+      background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--text);
+    }
+
+    /* Stats row */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .stat {
+      background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 10px; text-align: center;
+    }
+    .stat b { display: block; font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+    .stat span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+    /* Forms in modal-ish panels */
+    .panel {
+      background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin-bottom: 12px;
+    }
+    .panel h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .list-empty { text-align: center; padding: 36px 16px; color: var(--muted); font-size: 13px; }
+
+    /* Bottom nav */
+    .nav {
+      position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 480px;
+      z-index: 40; padding: 8px 12px calc(8px + var(--safe-b));
+    }
+    .nav-inner {
+      display: flex; background: rgba(16,22,38,.94); border: 1px solid rgba(56,189,248,.15);
+      border-radius: 22px; backdrop-filter: blur(20px); box-shadow: 0 10px 40px rgba(0,0,0,.45);
+      padding: 6px; gap: 2px;
+    }
+    .nav-inner button {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 10px 4px; border-radius: 16px; color: var(--muted); font-size: 10px; font-weight: 600;
+      transition: background .15s, color .15s;
+    }
+    .nav-inner button.on { background: rgba(56,189,248,.12); color: var(--cyan); }
+    .nav-inner button .ic { font-size: 18px; line-height: 1; }
+
+    /* Toast */
+    .toast {
+      position: fixed; left: 50%; bottom: calc(var(--nav-h) + 16px); transform: translateX(-50%) translateY(20px);
+      background: var(--card2); border: 1px solid var(--line); color: var(--text); padding: 10px 16px;
+      border-radius: 14px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none;
+      transition: .25s; z-index: 100; max-width: 90%;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Insights charts simple */
+    .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 100px; margin-top: 12px; }
+    .bar-chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+    .bar-chart .col i {
+      width: 100%; border-radius: 6px 6px 2px 2px; background: var(--grad); min-height: 4px;
+      transition: height .5s ease;
+    }
+    .bar-chart .col span { font-size: 9px; color: var(--muted); }
+
+    .share-box {
+      background: var(--bg); border: 1px dashed rgba(56,189,248,.3); border-radius: 14px;
+      padding: 12px; font-size: 12px; word-break: break-all; color: var(--muted); margin: 10px 0;
+    }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .tag-row button {
+      font-size: 11px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line);
+      background: var(--bg); color: var(--muted); font-weight: 600;
+    }
+    .tag-row button.on { border-color: var(--cyan); color: var(--cyan); background: rgba(56,189,248,.1); }
+
+    .future-self {
+      border-left: 3px solid var(--violet); padding: 10px 12px; margin-top: 10px;
+      background: rgba(192,132,252,.06); border-radius: 0 12px 12px 0; font-size: 13px; line-height: 1.5;
+      color: #e9d5ff; font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="mesh"></div>
+
+  <!-- ONBOARDING -->
+  <div id="onboard">
+    <div class="ob-card">
+      <div class="logo-mark">
+        <svg viewBox="0 0 40 40" fill="none"><rect x="6" y="24" width="5" height="10" rx="1.5" fill="#060810"/><rect x="14" y="18" width="5" height="16" rx="1.5" fill="#060810"/><rect x="22" y="12" width="5" height="22" rx="1.5" fill="#060810"/><rect x="30" y="6" width="5" height="28" rx="1.5" fill="#060810"/><circle cx="33" cy="5" r="3" fill="#fbbf24"/></svg>
+      </div>
+
+      <div class="step on" id="ob-welcome">
+        <h1>Goals Fin</h1>
+        <p class="tag">The goal OS for money that matters.<br>Track · Share · Get AI clarity · Stay offline-ready.</p>
+        <button class="btn btn-primary" id="ob-start">Get started</button>
+        <button class="btn btn-ghost" id="ob-guest">Try as Guest</button>
+      </div>
+
+      <div class="step" id="ob-profile">
+        <h1 style="font-size:22px">Your space</h1>
+        <p class="tag">Used only on this device. No account server.</p>
+        <div class="field"><label>Name</label><input id="ob-name" placeholder="Your name" maxlength="32" /></div>
+        <div class="field"><label>Currency</label>
+          <select id="ob-currency">
+            <option value="EUR">EUR €</option>
+            <option value="INR">INR ₹</option>
+            <option value="USD">USD $</option>
+            <option value="GBP">GBP £</option>
+          </select>
+        </div>
+        <div class="err" id="ob-err"></div>
+        <button class="btn btn-primary" id="ob-next-pin">Continue</button>
+        <button class="btn btn-ghost" id="ob-back-1">Back</button>
+      </div>
+
+      <div class="step" id="ob-pin">
+        <h1 style="font-size:22px">Lock Goals Fin</h1>
+        <p class="tag">4-digit PIN · optional biometrics next</p>
+        <div class="pin-row" id="ob-pin-a">
+          <input maxlength="1" inputmode="numeric" /><input maxlength="1" inputmode="numeric" />
+          <input maxlength="1" inputmode="numeric" /><input maxlength="1" inputmode="numeric" />
+        </div>
+        <p class="tag" style="margin:0 0 6px">Confirm</p>
+        <div class="pin-row" id="ob-pin-b">
+          <input maxlength="1" inputmode="numeric" /><input maxlength="1" inputmode="numeric" />
+          <input maxlength="1" inputmode="numeric" /><input maxlength="1" inputmode="numeric" />
+        </div>
+        <div class="err" id="ob-pin-err"></div>
+        <button class="btn btn-primary" id="ob-save-pin">Save PIN</button>
+      </div>
+
+      <div class="step" id="ob-bio">
+        <h1 style="font-size:22px">Biometrics</h1>
+        <p class="tag">Fingerprint or Face ID — stays on this phone.</p>
+        <button class="btn btn-bio" id="ob-enroll-bio">Enable Fingerprint / Face</button>
+        <button class="btn btn-primary" id="ob-skip-bio" style="margin-top:10px">Enter Goals Fin</button>
+        <p class="err" id="ob-bio-msg" style="color:var(--muted);margin-top:10px"></p>
+      </div>
+
+      <div class="step" id="ob-unlock">
+        <p class="tag" id="ob-hello" style="color:var(--cyan);font-weight:600">Welcome back</p>
+        <h1 style="font-size:22px">Unlock</h1>
+        <button class="btn btn-bio" id="ob-bio-unlock" style="margin:12px 0">Use Fingerprint / Face</button>
+        <div class="pin-row" id="ob-pin-u">
+          <input maxlength="1" inputmode="numeric" /><input maxlength="1" inputmode="numeric" />
+          <input maxlength="1" inputmode="numeric" /><input maxlength="1" inputmode="numeric" />
+        </div>
+        <div class="err" id="ob-u-err"></div>
+        <button class="btn btn-primary" id="ob-do-unlock">Unlock with PIN</button>
+        <button class="btn btn-ghost" id="ob-reset">Reset setup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div class="app" id="main" style="display:none">
+    <!-- HOME -->
+    <section class="screen active" id="s-home">
+      <div class="top">
+        <div class="brand">
+          <div class="mark"><svg viewBox="0 0 40 40" fill="none"><rect x="6" y="24" width="5" height="10" rx="1.5" fill="#060810"/><rect x="14" y="18" width="5" height="16" rx="1.5" fill="#060810"/><rect x="22" y="12" width="5" height="22" rx="1.5" fill="#060810"/><rect x="30" y="6" width="5" height="28" rx="1.5" fill="#060810"/><circle cx="33" cy="5" r="3" fill="#fbbf24"/></svg></div>
+          <div><strong>Goals Fin</strong><span id="greet">Hello</span></div>
+        </div>
+        <div class="avatar" id="avatar">G</div>
+      </div>
+
+      <div class="hero" id="momentum-hero">
+        <div class="label">Goal Momentum</div>
+        <div class="big" id="mom-score">—</div>
+        <div class="sub" id="mom-sub">Your progress velocity across active goals</div>
+        <div class="momentum-bar"><i id="mom-bar" style="width:0%"></i></div>
+        <div class="chips" id="mom-chips"></div>
+      </div>
+
+      <div class="ai-card" id="home-ai">
+        <div class="ai-h"><span>AI Insight</span></div>
+        <p id="home-ai-text">Add a goal to unlock personalized insights.</p>
+        <div class="actions" id="home-ai-actions"></div>
+      </div>
+
+      <div class="stats" id="home-stats"></div>
+
+      <div class="section-h">
+        <h2>Active goals</h2>
+        <button type="button" data-go="add">+ New</button>
+      </div>
+      <div id="goal-list"></div>
+    </section>
+
+    <!-- ADD / EDIT -->
+    <section class="screen" id="s-add">
+      <div class="top"><div class="brand"><strong id="add-title">New goal</strong></div>
+        <button type="button" data-go="home" style="color:var(--muted);font-size:13px">Cancel</button>
+      </div>
+      <div class="panel">
+        <div class="field"><label>Goal name</label><input id="g-name" placeholder="Emergency fund, House, Trip…" /></div>
+        <div class="row2">
+          <div class="field"><label>Target amount</label><input id="g-target" type="number" min="0" step="any" placeholder="10000" /></div>
+          <div class="field"><label>Already saved</label><input id="g-saved" type="number" min="0" step="any" placeholder="0" /></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Monthly contribution</label><input id="g-monthly" type="number" min="0" step="any" placeholder="500" /></div>
+          <div class="field"><label>Deadline</label><input id="g-deadline" type="month" /></div>
+        </div>
+        <div class="field"><label>Category</label>
+          <div class="tag-row" id="g-cats">
+            <button type="button" data-cat="Emergency" class="on">Emergency</button>
+            <button type="button" data-cat="Home">Home</button>
+            <button type="button" data-cat="Family">Family</button>
+            <button type="button" data-cat="Travel">Travel</button>
+            <button type="button" data-cat="Freedom">Freedom</button>
+            <button type="button" data-cat="Education">Education</button>
+            <button type="button" data-cat="Other">Other</button>
+          </div>
+        </div>
+        <div class="field"><label>Note (optional)</label><textarea id="g-note" rows="2" placeholder="Why this goal matters…"></textarea></div>
+        <div class="err" id="g-err"></div>
+        <button class="btn btn-primary" id="g-save">Save goal</button>
+      </div>
+    </section>
+
+    <!-- DETAIL -->
+    <section class="screen" id="s-detail">
+      <div class="top">
+        <button type="button" data-go="home" style="color:var(--cyan);font-size:13px;font-weight:600">← Back</button>
+        <button type="button" id="d-share" style="color:var(--muted);font-size:13px">Share</button>
+      </div>
+      <div class="panel" id="detail-panel"></div>
+      <div class="panel">
+        <h3>Log progress</h3>
+        <div class="row2">
+          <div class="field"><label>Amount</label><input id="log-amt" type="number" min="0" step="any" placeholder="100" /></div>
+          <div class="field"><label>Note</label><input id="log-note" placeholder="Salary cut, bonus…" /></div>
+        </div>
+        <button class="btn btn-primary" id="log-save">Add contribution</button>
+      </div>
+      <div class="panel">
+        <h3>History</h3>
+        <div id="log-list"></div>
+      </div>
+    </section>
+
+    <!-- INSIGHTS -->
+    <section class="screen" id="s-insights">
+      <div class="top"><div class="brand"><strong>AI Insights</strong></div></div>
+      <div class="ai-card">
+        <div class="ai-h"><span>Live analysis</span></div>
+        <p id="ins-main">Your numbers shape the story.</p>
+        <div class="future-self" id="ins-future"></div>
+      </div>
+      <div class="panel">
+        <h3>Contribution rhythm</h3>
+        <div class="bar-chart" id="ins-bars"></div>
+      </div>
+      <div class="panel">
+        <h3>Recommendations</h3>
+        <div id="ins-recs"></div>
+      </div>
+      <div class="panel">
+        <h3>Sacrifice & runway</h3>
+        <p id="ins-sac" style="font-size:13px;color:var(--muted);line-height:1.5"></p>
+      </div>
+    </section>
+
+    <!-- SHARE -->
+    <section class="screen" id="s-share">
+      <div class="top"><div class="brand"><strong>Share & alerts</strong></div></div>
+      <div class="panel">
+        <h3>Share a goal snapshot</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Create a private text snapshot or use your device share sheet. No cloud account required.</p>
+        <select id="share-goal" style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px"></select>
+        <div class="share-box" id="share-preview">Select a goal…</div>
+        <button class="btn btn-primary" id="share-do">Share via device</button>
+        <button class="btn btn-soft" id="share-copy" style="margin-top:8px">Copy text</button>
+      </div>
+      <div class="panel">
+        <h3>Timely alerts</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Local reminders on this device (notification permission).</p>
+        <div class="field"><label>Remind me every</label>
+          <select id="alert-freq">
+            <option value="off">Off</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly contribution day</option>
+          </select>
+        </div>
+        <button class="btn btn-soft" id="alert-save">Save alert preference</button>
+        <button class="btn btn-ghost" id="alert-test">Test notification</button>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="s-settings">
+      <div class="top"><div class="brand"><strong>Settings</strong></div></div>
+      <div class="panel">
+        <h3>Profile</h3>
+        <div class="field"><label>Name</label><input id="set-name" /></div>
+        <div class="field"><label>Currency</label>
+          <select id="set-currency">
+            <option value="EUR">EUR €</option><option value="INR">INR ₹</option>
+            <option value="USD">USD $</option><option value="GBP">GBP £</option>
+          </select>
+        </div>
+        <button class="btn btn-soft" id="set-save">Save profile</button>
+      </div>
+      <div class="panel">
+        <h3>Data</h3>
+        <button class="btn btn-soft" id="set-export">Export backup (JSON)</button>
+        <button class="btn btn-soft" id="set-import" style="margin-top:8px">Import backup</button>
+        <input type="file" id="set-import-file" accept="application/json" hidden />
+        <button class="btn btn-ghost" id="set-reset" style="color:var(--red)">Reset all Goals Fin data</button>
+      </div>
+      <div class="panel">
+        <h3>About</h3>
+        <p style="font-size:12px;color:var(--muted);line-height:1.5">Goals Fin runs fully on your device. AI insights are generated from your numbers offline — no data leaves the phone unless you share it.</p>
+      </div>
+    </section>
+
+    <nav class="nav">
+      <div class="nav-inner">
+        <button type="button" class="on" data-go="home"><span class="ic">◇</span>Home</button>
+        <button type="button" data-go="add"><span class="ic">＋</span>Add</button>
+        <button type="button" data-go="insights"><span class="ic">✦</span>AI</button>
+        <button type="button" data-go="share"><span class="ic">↗</span>Share</button>
+        <button type="button" data-go="settings"><span class="ic">⚙</span>More</button>
+      </div>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    const DB = {
+      profile: 'gf_profile',
+      goals: 'gf_goals',
+      logs: 'gf_logs',
+      auth: 'gf_auth',
+      cred: 'gf_cred',
+      alerts: 'gf_alerts'
+    };
+    const $ = (s, el = document) => el.querySelector(s);
+    const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+    const uid = () => Math.random().toString(36).slice(2, 10);
+    const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+    const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+    const SYM = { EUR: '€', INR: '₹', USD: '$', GBP: '£' };
+    const CAT_COLOR = {
+      Emergency: 'rgba(52,211,153,.2)', Home: 'rgba(56,189,248,.2)', Family: 'rgba(244,114,182,.2)',
+      Travel: 'rgba(251,191,36,.2)', Freedom: 'rgba(192,132,252,.2)', Education: 'rgba(129,140,248,.2)', Other: 'rgba(148,163,184,.15)'
+    };
+    const CAT_EMOJI = { Emergency: '🛡', Home: '🏠', Family: '💗', Travel: '✈️', Freedom: '🌅', Education: '📚', Other: '🎯' };
+
+    let profile = load(DB.profile, null);
+    let goals = load(DB.goals, []);
+    let logs = load(DB.logs, []);
+    let auth = load(DB.auth, null);
+    let editingId = null;
+    let detailId = null;
+    let selectedCat = 'Emergency';
+
+    function money(n) {
+      const c = (profile && profile.currency) || 'EUR';
+      const s = SYM[c] || '';
+      const x = Number(n) || 0;
+      return s + x.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+    function toast(msg) {
+      const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    function monthsBetween(a, b) {
+      return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+    }
+
+    /* ---------- AI / Insights engine (offline) ---------- */
+    function analyze() {
+      const active = goals.filter(g => g.saved < g.target);
+      const totalTarget = goals.reduce((s, g) => s + (+g.target || 0), 0);
+      const totalSaved = goals.reduce((s, g) => s + (+g.saved || 0), 0);
+      const monthly = goals.reduce((s, g) => s + (+g.monthly || 0), 0);
+      const pct = totalTarget ? (totalSaved / totalTarget) * 100 : 0;
+
+      // Momentum: blend of completion %, contribution consistency, deadline pressure
+      let velocity = 0;
+      active.forEach(g => {
+        const need = Math.max(0, g.target - g.saved);
+        const m = +g.monthly || 0;
+        const monthsNeed = m > 0 ? need / m : 99;
+        const deadline = g.deadline ? new Date(g.deadline + '-01') : null;
+        const monthsLeft = deadline ? Math.max(1, monthsBetween(new Date(), deadline)) : 24;
+        const onTrack = monthsNeed <= monthsLeft ? 1 : monthsLeft / Math.max(monthsNeed, 1);
+        const fill = g.target ? g.saved / g.target : 0;
+        velocity += (onTrack * 0.6 + fill * 0.4) * 100;
+      });
+      const momentum = active.length ? Math.round(Math.min(100, velocity / active.length)) : 0;
+
+      const insights = [];
+      if (!goals.length) {
+        insights.push({ text: 'Start with one concrete goal — emergency buffer or a date-bound target. Clarity beats complexity.', action: 'Add goal' });
+      } else {
+        if (momentum >= 75) insights.push({ text: 'Your Goal Momentum is strong. Protect the streak: lock next month’s contributions today.', action: null });
+        else if (momentum >= 45) insights.push({ text: 'Solid progress, but velocity is soft. A 10–15% bump in monthly contributions would pull deadlines forward.', action: null });
+        else insights.push({ text: 'Momentum is low. Pick the goal with the nearest deadline and make one contribution this week — small moves restart the system.', action: null });
+
+        active.forEach(g => {
+          const need = g.target - g.saved;
+          const m = +g.monthly || 0;
+          if (m > 0 && need > 0) {
+            const months = Math.ceil(need / m);
+            const finish = new Date(); finish.setMonth(finish.getMonth() + months);
+            if (g.deadline) {
+              const dl = new Date(g.deadline + '-01');
+              if (finish > dl) {
+                const gap = Math.ceil(need / Math.max(1, monthsBetween(new Date(), dl))) - m;
+                insights.push({ text: `“${g.name}” is behind pace. +${money(Math.max(0, gap))}/mo closes the gap by ${g.deadline}.`, action: null });
+              }
+            }
+          }
+        });
+
+        if (monthly > 0 && totalTarget > totalSaved) {
+          const runway = Math.ceil((totalTarget - totalSaved) / monthly);
+          insights.push({ text: `At ${money(monthly)}/mo across goals, full completion is ~${runway} months away.`, action: null });
+        }
+      }
+
+      // Future Self message
+      let future = '';
+      if (pct >= 50) future = 'Future you is already half-built. The hard part was starting — don’t negotiate with the finish line.';
+      else if (goals.length) future = 'Future you is watching the next transfer, not the perfect plan. One honest contribution beats a polished spreadsheet.';
+      else future = 'Future you is waiting for the first number on the board.';
+
+      // Sacrifice score: monthly vs remaining (abstract 0-100)
+      const sac = monthly && totalTarget ? Math.min(100, Math.round((monthly * 12) / Math.max(totalTarget - totalSaved, 1) * 40)) : 0;
+
+      return { momentum, pct, totalTarget, totalSaved, monthly, insights, future, sac, active };
+    }
+
+    function categoryRhythm() {
+      const map = {};
+      logs.forEach(l => {
+        const g = goals.find(x => x.id === l.goalId);
+        const c = (g && g.category) || 'Other';
+        map[c] = (map[c] || 0) + (+l.amount || 0);
+      });
+      return map;
+    }
+
+    /* ---------- Render ---------- */
+    function go(name) {
+      $$('.screen').forEach(s => s.classList.remove('active'));
+      const el = $('#s-' + name);
+      if (el) el.classList.add('active');
+      $$('.nav-inner button').forEach(b => b.classList.toggle('on', b.dataset.go === name));
+      if (name === 'home') renderHome();
+      if (name === 'insights') renderInsights();
+      if (name === 'share') renderShare();
+      if (name === 'settings') renderSettings();
+      if (name === 'add') {
+        editingId = null;
+        $('#add-title').textContent = 'New goal';
+        $('#g-name').value = ''; $('#g-target').value = ''; $('#g-saved').value = '';
+        $('#g-monthly').value = ''; $('#g-deadline').value = ''; $('#g-note').value = '';
+        selectedCat = 'Emergency';
+        $$('#g-cats button').forEach(b => b.classList.toggle('on', b.dataset.cat === selectedCat));
+      }
+    }
+    $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+
+    function renderHome() {
+      const a = analyze();
+      $('#greet').textContent = profile ? 'Hi, ' + profile.name.split(' ')[0] : 'Hello';
+      $('#avatar').textContent = profile ? profile.name.slice(0, 1).toUpperCase() : 'G';
+      $('#mom-score').textContent = a.momentum + '';
+      $('#mom-sub').textContent = a.momentum >= 75 ? 'High velocity — keep the streak' : a.momentum >= 45 ? 'Steady — accelerate one goal' : 'Rebuild momentum with one action';
+      $('#mom-bar').style.width = a.momentum + '%';
+      const chips = $('#mom-chips'); chips.innerHTML = '';
+      chips.innerHTML = `<span class="chip hot">${a.active.length} active</span>
+        <span class="chip good">${Math.round(a.pct)}% funded</span>
+        <span class="chip">${money(a.monthly)}/mo</span>`;
+
+      const top = a.insights[0];
+      $('#home-ai-text').textContent = top ? top.text : '';
+      const act = $('#home-ai-actions'); act.innerHTML = '';
+      if (top && top.action) {
+        const b = document.createElement('button'); b.textContent = top.action;
+        b.onclick = () => go('add'); act.appendChild(b);
+      }
+
+      $('#home-stats').innerHTML = `
+        <div class="stat"><b>${money(a.totalSaved)}</b><span>Saved</span></div>
+        <div class="stat"><b>${money(a.totalTarget)}</b><span>Target</span></div>
+        <div class="stat"><b>${a.active.length}</b><span>Active</span></div>`;
+
+      const list = $('#goal-list');
+      if (!goals.length) {
+        list.innerHTML = '<div class="list-empty">No goals yet.<br>Tap + New to plant the first one.</div>';
+        return;
+      }
+      list.innerHTML = goals.map(g => {
+        const pct = g.target ? Math.min(100, (g.saved / g.target) * 100) : 0;
+        const left = Math.max(0, g.target - g.saved);
+        return `<div class="goal" data-id="${g.id}">
+          <div class="goal-top">
+            <div class="goal-ico" style="background:${CAT_COLOR[g.category]||CAT_COLOR.Other}">${CAT_EMOJI[g.category]||'🎯'}</div>
+            <div class="goal-body"><h3>${escapeHtml(g.name)}</h3><p>${g.category}${g.deadline ? ' · by ' + g.deadline : ''}</p></div>
+            <div class="goal-amt"><strong>${money(g.saved)}</strong><span>of ${money(g.target)}</span></div>
+          </div>
+          <div class="prog"><i style="width:${pct}%"></i></div>
+          <div class="goal-meta"><span>${pct.toFixed(0)}%</span><span>${money(left)} left · ${money(g.monthly)}/mo</span></div>
+        </div>`;
+      }).join('');
+      $$('.goal', list).forEach(el => el.addEventListener('click', () => openDetail(el.dataset.id)));
+    }
+
+    function openDetail(id) {
+      detailId = id;
+      const g = goals.find(x => x.id === id);
+      if (!g) return;
+      go('detail');
+      const pct = g.target ? Math.min(100, (g.saved / g.target) * 100) : 0;
+      const need = Math.max(0, g.target - g.saved);
+      const months = g.monthly > 0 ? Math.ceil(need / g.monthly) : null;
+      $('#detail-panel').innerHTML = `
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+          <div class="goal-ico" style="background:${CAT_COLOR[g.category]||CAT_COLOR.Other};width:48px;height:48px;font-size:22px">${CAT_EMOJI[g.category]||'🎯'}</div>
+          <div><h3 style="font-size:18px">${escapeHtml(g.name)}</h3><p style="font-size:12px;color:var(--muted)">${g.category}</p></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>${money(g.saved)}</b><span>Saved</span></div>
+          <div class="stat"><b>${money(g.target)}</b><span>Target</span></div>
+          <div class="stat"><b>${pct.toFixed(0)}%</b><span>Done</span></div>
+        </div>
+        <div class="prog" style="height:8px;margin:8px 0 12px"><i style="width:${pct}%"></i></div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.5">
+          ${months != null ? `At ${money(g.monthly)}/mo → ~${months} months to finish.` : 'Set a monthly contribution to project a finish date.'}
+          ${g.deadline ? `<br>Deadline: <b style="color:var(--text)">${g.deadline}</b>` : ''}
+        </p>
+        ${g.note ? `<p style="margin-top:10px;font-size:13px;color:#cbd5e1">${escapeHtml(g.note)}</p>` : ''}
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn btn-soft" id="d-edit" style="flex:1">Edit</button>
+          <button class="btn btn-ghost" id="d-del" style="flex:1;color:var(--red)">Delete</button>
+        </div>`;
+      $('#d-edit').onclick = () => {
+        editingId = g.id;
+        go('add');
+        $('#add-title').textContent = 'Edit goal';
+        $('#g-name').value = g.name; $('#g-target').value = g.target; $('#g-saved').value = g.saved;
+        $('#g-monthly').value = g.monthly; $('#g-deadline').value = g.deadline || '';
+        $('#g-note').value = g.note || ''; selectedCat = g.category;
+        $$('#g-cats button').forEach(b => b.classList.toggle('on', b.dataset.cat === selectedCat));
+      };
+      $('#d-del').onclick = () => {
+        if (!confirm('Delete this goal?')) return;
+        goals = goals.filter(x => x.id !== id);
+        logs = logs.filter(l => l.goalId !== id);
+        save(DB.goals, goals); save(DB.logs, logs);
+        toast('Goal removed'); go('home');
+      };
+      renderLogs(id);
+    }
+
+    function renderLogs(goalId) {
+      const items = logs.filter(l => l.goalId === goalId).sort((a, b) => b.at - a.at);
+      $('#log-list').innerHTML = items.length ? items.map(l =>
+        `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px">
+          <span>${new Date(l.at).toLocaleDateString()} · ${escapeHtml(l.note || 'Contribution')}</span>
+          <strong style="color:var(--green)">+${money(l.amount)}</strong>
+        </div>`).join('') : '<p style="font-size:12px;color:var(--muted)">No contributions yet.</p>';
+    }
+
+    function renderInsights() {
+      const a = analyze();
+      $('#ins-main').textContent = a.insights.map(i => i.text).join(' ');
+      $('#ins-future').textContent = a.future;
+      const rhythm = categoryRhythm();
+      const keys = Object.keys(rhythm);
+      const max = Math.max(1, ...Object.values(rhythm));
+      $('#ins-bars').innerHTML = keys.length ? keys.map(k =>
+        `<div class="col"><i style="height:${Math.max(8, (rhythm[k] / max) * 90)}px"></i><span>${k.slice(0, 4)}</span></div>`
+      ).join('') : '<p style="font-size:12px;color:var(--muted)">Log contributions to see rhythm.</p>';
+      $('#ins-recs').innerHTML = a.insights.slice(0, 4).map(i =>
+        `<div style="padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.45">${i.text}</div>`
+      ).join('') || '<p style="color:var(--muted);font-size:13px">Add goals to get recommendations.</p>';
+      $('#ins-sac').textContent = a.monthly
+        ? `You’re directing ${money(a.monthly)}/mo into goals (Sacrifice focus ~${a.sac}/100). Higher isn’t always better — sustainable beats heroic for 12+ months.`
+        : 'Set monthly contribution amounts on goals to measure sacrifice vs runway.';
+    }
+
+    function renderShare() {
+      const sel = $('#share-goal');
+      sel.innerHTML = goals.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('') || '<option>No goals</option>';
+      const update = () => {
+        const g = goals.find(x => x.id === sel.value);
+        if (!g) { $('#share-preview').textContent = 'Select a goal…'; return; }
+        const pct = g.target ? ((g.saved / g.target) * 100).toFixed(1) : 0;
+        $('#share-preview').textContent =
+`🎯 ${g.name} — Goals Fin
+Progress: ${money(g.saved)} / ${money(g.target)} (${pct}%)
+Pace: ${money(g.monthly)}/mo${g.deadline ? '\nDeadline: ' + g.deadline : ''}
+Tracked privately on device.`;
+      };
+      sel.onchange = update; update();
+    }
+
+    function renderSettings() {
+      if (!profile) return;
+      $('#set-name').value = profile.name;
+      $('#set-currency').value = profile.currency;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    /* ---------- Actions ---------- */
+    $$('#g-cats button').forEach(b => b.addEventListener('click', () => {
+      selectedCat = b.dataset.cat;
+      $$('#g-cats button').forEach(x => x.classList.toggle('on', x === b));
+    }));
+
+    $('#g-save').onclick = () => {
+      const name = $('#g-name').value.trim();
+      const target = +$('#g-target').value;
+      const saved = +$('#g-saved').value || 0;
+      const monthly = +$('#g-monthly').value || 0;
+      const deadline = $('#g-deadline').value;
+      const note = $('#g-note').value.trim();
+      if (!name || !target || target <= 0) { $('#g-err').textContent = 'Name and target amount required.'; return; }
+      $('#g-err').textContent = '';
+      if (editingId) {
+        goals = goals.map(g => g.id === editingId ? { ...g, name, target, saved, monthly, deadline, note, category: selectedCat } : g);
+        toast('Goal updated');
+      } else {
+        goals.unshift({ id: uid(), name, target, saved, monthly, deadline, note, category: selectedCat, created: Date.now() });
+        toast('Goal created');
+      }
+      save(DB.goals, goals);
+      go('home');
+      scheduleAlertCheck();
+    };
+
+    $('#log-save').onclick = () => {
+      const amt = +$('#log-amt').value;
+      if (!detailId || !amt || amt <= 0) { toast('Enter an amount'); return; }
+      const g = goals.find(x => x.id === detailId);
+      if (!g) return;
+      g.saved = (+g.saved || 0) + amt;
+      logs.push({ id: uid(), goalId: detailId, amount: amt, note: $('#log-note').value.trim(), at: Date.now() });
+      save(DB.goals, goals); save(DB.logs, logs);
+      $('#log-amt').value = ''; $('#log-note').value = '';
+      toast('Logged +' + money(amt));
+      openDetail(detailId);
+    };
+
+    $('#share-do').onclick = async () => {
+      const text = $('#share-preview').textContent;
+      if (navigator.share) {
+        try { await navigator.share({ title: 'Goals Fin', text }); } catch (e) {}
+      } else {
+        await navigator.clipboard.writeText(text); toast('Copied — share anywhere');
+      }
+    };
+    $('#share-copy').onclick = async () => {
+      await navigator.clipboard.writeText($('#share-preview').textContent);
+      toast('Copied');
+    };
+    $('#d-share').onclick = () => { go('share'); const g = goals.find(x => x.id === detailId); if (g) { $('#share-goal').value = g.id; $('#share-goal').dispatchEvent(new Event('change')); } };
+
+    $('#alert-save').onclick = async () => {
+      const freq = $('#alert-freq').value;
+      save(DB.alerts, { freq, at: Date.now() });
+      if (freq !== 'off' && 'Notification' in window) {
+        const p = await Notification.requestPermission();
+        if (p !== 'granted') toast('Allow notifications in browser settings');
+        else toast('Alerts saved');
+      } else toast('Alerts preference saved');
+    };
+    $('#alert-test').onclick = () => notify('Goals Fin', 'Time to move one goal forward today.');
+
+    function notify(title, body) {
+      if (!('Notification' in window)) { toast(body); return; }
+      if (Notification.permission === 'granted') new Notification(title, { body, icon: 'icons/icon-192.png' });
+      else Notification.requestPermission().then(p => { if (p === 'granted') new Notification(title, { body, icon: 'icons/icon-192.png' }); else toast(body); });
+    }
+    function scheduleAlertCheck() {
+      const conf = load(DB.alerts, { freq: 'off' });
+      if (conf.freq === 'off') return;
+      // Lightweight: if last notify > interval, nudge on open
+      const last = conf.lastNotify || 0;
+      const day = 86400000;
+      const need = conf.freq === 'daily' ? day : conf.freq === 'weekly' ? 7 * day : 30 * day;
+      if (Date.now() - last > need) {
+        notify('Goals Fin', 'Quick check-in: log a contribution or review AI insights.');
+        conf.lastNotify = Date.now(); save(DB.alerts, conf);
+      }
+    }
+
+    $('#set-save').onclick = () => {
+      profile = { ...profile, name: $('#set-name').value.trim() || profile.name, currency: $('#set-currency').value };
+      save(DB.profile, profile); toast('Profile saved'); renderHome();
+    };
+    $('#set-export').onclick = () => {
+      const blob = new Blob([JSON.stringify({ profile, goals, logs, exportedAt: Date.now() }, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'goals-fin-backup.json'; a.click();
+    };
+    $('#set-import').onclick = () => $('#set-import-file').click();
+    $('#set-import-file').onchange = async (e) => {
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      try {
+        const data = JSON.parse(await f.text());
+        if (data.goals) { goals = data.goals; save(DB.goals, goals); }
+        if (data.logs) { logs = data.logs; save(DB.logs, logs); }
+        if (data.profile) { profile = data.profile; save(DB.profile, profile); }
+        toast('Import complete'); go('home');
+      } catch { toast('Invalid backup file'); }
+    };
+    $('#set-reset').onclick = () => {
+      if (!confirm('Erase all Goals Fin data on this device?')) return;
+      Object.values(DB).forEach(k => localStorage.removeItem(k));
+      location.reload();
+    };
+
+    /* ---------- Auth / onboard ---------- */
+    function pinOf(row) { return $$('input', row).map(i => i.value).join(''); }
+    function wirePin(row) {
+      const inputs = $$('input', row);
+      inputs.forEach((inp, idx) => {
+        inp.addEventListener('input', () => {
+          inp.value = inp.value.replace(/\D/g, '').slice(0, 1);
+          if (inp.value && idx < inputs.length - 1) inputs[idx + 1].focus();
+        });
+        inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && idx) inputs[idx - 1].focus(); });
+      });
+    }
+    function showOb(id) {
+      $$('#onboard .step').forEach(s => s.classList.remove('on'));
+      $('#' + id).classList.add('on');
+    }
+    function enterApp() {
+      $('#onboard').classList.remove('show');
+      $('#main').style.display = 'block';
+      renderHome();
+      scheduleAlertCheck();
+    }
+
+    async function enrollBio() {
+      if (!window.PublicKeyCredential) { $('#ob-bio-msg').textContent = 'Biometrics not available — PIN works.'; return false; }
+      try {
+        const challenge = crypto.getRandomValues(new Uint8Array(32));
+        const userId = crypto.getRandomValues(new Uint8Array(16));
+        const cred = await navigator.credentials.create({
+          publicKey: {
+            challenge, rp: { name: 'Goals Fin', id: location.hostname || 'localhost' },
+            user: { id: userId, name: (profile && profile.name || 'user') + '@goalsfin.local', displayName: profile && profile.name || 'User' },
+            pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+            authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+            timeout: 60000, attestation: 'none'
+          }
+        });
+        save(DB.cred, { id: cred.id, rawId: btoa(String.fromCharCode(...new Uint8Array(cred.rawId))) });
+        auth = { ...auth, bio: true }; save(DB.auth, auth);
+        $('#ob-bio-msg').textContent = 'Biometrics on ✓';
+        return true;
+      } catch (e) { $('#ob-bio-msg').textContent = 'Skipped or failed — PIN still works.'; return false; }
+    }
+    async function unlockBio() {
+      const meta = load(DB.cred, null);
+      if (!meta || !window.PublicKeyCredential) return false;
+      try {
+        const raw = Uint8Array.from(atob(meta.rawId), c => c.charCodeAt(0));
+        const assertion = await navigator.credentials.get({
+          publicKey: {
+            challenge: crypto.getRandomValues(new Uint8Array(32)),
+            rpId: location.hostname || 'localhost',
+            allowCredentials: [{ type: 'public-key', id: raw }],
+            userVerification: 'required', timeout: 60000
+          }
+        });
+        return !!assertion;
+      } catch { return false; }
+    }
+
+    // Wire onboard
+    wirePin($('#ob-pin-a')); wirePin($('#ob-pin-b')); wirePin($('#ob-pin-u'));
+    $('#ob-start').onclick = () => showOb('ob-profile');
+    $('#ob-guest').onclick = () => {
+      profile = { name: 'Guest', currency: 'EUR' }; save(DB.profile, profile);
+      auth = { pin: null, bio: false }; save(DB.auth, auth);
+      enterApp();
+    };
+    $('#ob-back-1').onclick = () => showOb('ob-welcome');
+    $('#ob-next-pin').onclick = () => {
+      const name = $('#ob-name').value.trim();
+      if (name.length < 2) { $('#ob-err').textContent = 'Enter your name'; return; }
+      profile = { name, currency: $('#ob-currency').value }; save(DB.profile, profile);
+      showOb('ob-pin');
+    };
+    $('#ob-save-pin').onclick = () => {
+      const a = pinOf($('#ob-pin-a')), b = pinOf($('#ob-pin-b'));
+      if (a.length !== 4) { $('#ob-pin-err').textContent = 'Enter 4 digits'; return; }
+      if (a !== b) { $('#ob-pin-err').textContent = 'PINs do not match'; return; }
+      auth = { pin: a, bio: false }; save(DB.auth, auth);
+      showOb('ob-bio');
+    };
+    $('#ob-enroll-bio').onclick = async () => { if (await enrollBio()) setTimeout(enterApp, 500); };
+    $('#ob-skip-bio').onclick = () => enterApp();
+    $('#ob-bio-unlock').onclick = async () => { if (await unlockBio()) enterApp(); else $('#ob-u-err').textContent = 'Try PIN'; };
+    $('#ob-do-unlock').onclick = () => {
+      const p = pinOf($('#ob-pin-u'));
+      if (!auth || p !== auth.pin) { $('#ob-u-err').textContent = 'Wrong PIN'; return; }
+      enterApp();
+    };
+    $('#ob-reset').onclick = () => {
+      if (confirm('Reset login only? Goals data is kept.')) {
+        localStorage.removeItem(DB.auth); localStorage.removeItem(DB.cred); auth = null; showOb('ob-welcome');
+      }
+    };
+
+    // Boot
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+    if (profile && auth && auth.pin) {
+      $('#onboard').classList.add('show');
+      $('#ob-hello').textContent = 'Welcome back, ' + profile.name.split(' ')[0];
+      showOb('ob-unlock');
+    } else if (profile && auth && !auth.pin) {
+      enterApp();
+    } else {
+      $('#onboard').classList.add('show');
+      showOb('ob-welcome');
+    }
+  })();
+  </script>
+</body>
+</html>
